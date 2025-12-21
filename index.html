@@ -31,6 +31,22 @@
             /* 淺黑交替條紋 */
             background-color: #0a0a0a; /* Slightly off-black */
         }
+
+        /* --- 貪吃蛇遊戲樣式整合 --- */
+        #game-canvas {
+            border: 4px solid #4a5568;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #2d3748;
+            max-width: 100%;
+            height: auto;
+            /* 確保在部落格文章中居中 */
+            display: block;
+            margin: 0 auto;
+        }
+        .control-btn {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
 </head>
 <body class="antialiased text-gray-300">
@@ -51,7 +67,7 @@
                 <a href="#section1" class="text-gray-400 hover:text-white font-medium transition duration-150 py-1">關於我</a>
                 
                 <!-- 3. 專案/作品集 (多個作品連結) -->
-                <a href="#section4" class="text-gray-400 hover:text-white font-medium transition duration-150 py-1">專案/作品集</a>
+                <a href="#snake-game" class="text-gray-400 hover:text-white font-medium transition duration-150 py-1">專案/作品集</a>
                 
                 <!-- 4. 其他.... (指向學習經歷作為代表) -->
                 <a href="#section2" class="text-gray-400 hover:text-white font-medium transition duration-150 py-1">其他 (經歷/技能)</a>
@@ -81,7 +97,6 @@
                     
                     <section class="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-6">
                         <!-- 圖片 (使用佔位符) -->
-                        <!-- 請將 src 屬性的值替換為您的圖片檔案路徑或公開網址 (URL) -->
                         <img src="S__48939035.jpg" alt="Ricky picture" class="rounded-full w-36 h-36 object-cover shadow-lg border-4 border-gray-600">
                         
                         <!-- 介紹文字 -->
@@ -89,7 +104,6 @@
                             <h1 class="text-3xl font-extrabold text-white">Ricky</h1>
                             <p class="text-lg text-gray-400 mt-1">
                                 <em>
-                                    <!-- 連結顏色改為柔和的淺灰色 -->
                                     <strong><a href="https://www.ntue.edu.tw/" target="_blank" class="text-gray-400 hover:text-white underline">國立台北教育大學</a></strong>大二學生
                                 </em>
                             </p>
@@ -97,13 +111,105 @@
                     </section>
                     
                     <section class="mt-6 text-gray-300 leading-relaxed">
-                        <!-- Mark 標籤使用灰底白字，模擬底片的反白效果 -->
                         <p class="mb-2">我是一位大二學生，專注學習<mark class="bg-gray-800 text-white p-0.5 rounded">資料結構</mark> 和 <mark class="bg-gray-800 text-white p-0.5 rounded">多媒體概論</mark>，並致力於 <mark class="bg-gray-800 text-white p-0.5 rounded">參加球隊比賽</mark> 與 <mark class="bg-gray-800 text-white p-0.5 rounded">參加各式活動</mark>。</p>
                         <p>此外，我也熱愛旅遊、音樂與電影，希望透過所學知識創造屬於自己的特色作品，並分享給大家。</p>
                     </section>
                 </article>
 
-                <!-- 學習經歷介紹 (屬於 '其他....' 的一部分) -->
+                <!-- 貪吃蛇遊戲區塊 (新加入) -->
+                <article id="snake-game" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
+                    <header class="border-b border-gray-800 pb-3 mb-4 flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-green-400">貪吃蛇小遊戲 (Mini Game)</h2>
+                        <div class="text-right text-sm font-mono text-gray-400">
+                            <div>分數: <span id="score-display">0</span></div>
+                            <div>最高分: <span id="high-score-display">0</span></div>
+                        </div>
+                    </header>
+                    
+                    <div class="flex flex-col items-center">
+                        <!-- 遊戲畫布容器 -->
+                        <div class="relative w-fit">
+                            <canvas id="game-canvas" width="400" height="400"></canvas>
+                            
+                            <!-- 暫停/死亡 覆蓋層 -->
+                            <div id="overlay" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center transition-opacity duration-300 rounded-sm">
+                                <h2 id="overlay-title" class="text-3xl font-bold mb-4 text-white">準備好了嗎？</h2>
+                                <button id="restart-btn" class="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-full font-bold text-lg transition-transform active:scale-95 shadow-lg">
+                                    開始遊戲
+                                </button>
+                                <p class="text-gray-400 mt-4 text-sm">點擊開始後，使用方向鍵控制</p>
+                            </div>
+                        </div>
+
+                        <!-- 遊戲提示 -->
+                        <p class="mt-4 text-gray-500 text-sm hidden md:block">
+                            <span class="inline-block px-2 py-1 bg-gray-800 rounded mr-2">↑ ↓ ← →</span> 控制方向
+                        </p>
+
+                        <!-- 移動端控制介面 (僅在小螢幕顯示) -->
+                        <div class="mt-6 grid grid-cols-3 gap-2 md:hidden">
+                            <div></div>
+                            <button id="btn-up" class="control-btn w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center active:bg-gray-700 text-white shadow-md border border-gray-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                            </button>
+                            <div></div>
+                            <button id="btn-left" class="control-btn w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center active:bg-gray-700 text-white shadow-md border border-gray-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <button id="btn-down" class="control-btn w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center active:bg-gray-700 text-white shadow-md border border-gray-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <button id="btn-right" class="control-btn w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center active:bg-gray-700 text-white shadow-md border border-gray-700">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 音樂作品介紹 -->
+                <article id="section4" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
+                    <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-800 pb-3">音樂作品 (Portfolio)</h2>
+                    <audio controls class="w-full bg-gray-900 rounded-lg border border-gray-700">
+                        <source src="New Composition #1.mp3" type="audio/mpeg">
+                    </audio>
+                    <p class="text-sm text-gray-500 mt-2">請注意：請使用公共 URL 替換 `src` 屬性以確保播放正常。</p>
+                </article>
+
+                <!-- 視訊作品介紹 -->
+                <article id="section5" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
+                    <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-800 pb-3">視訊作品 (Portfolio)</h2>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
+                        <div class="flex-1 min-w-0">
+                            <video controls class="w-full h-auto rounded-lg shadow-md bg-gray-900 border border-gray-700">
+                                <source src="assets/video/Whispers in the Trees 1.mp4" type="video/mp4">
+                                抱歉，您的瀏覽器不支援視訊元素。
+                            </video>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <video controls class="w-full h-auto rounded-lg shadow-md bg-gray-900 border border-gray-700">
+                                <source src="assets/video/Rise Up and Shine.mp4" type="video/mp4">
+                                抱歉，您的瀏覽器不支援視訊元素。
+                            </video>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- 圖片作品集介紹 -->
+                <article id="section6" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
+                    <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-800 pb-3">圖片作品 (Portfolio)</h2>
+                    <div class="flex flex-col md:flex-row gap-4 justify-center">
+                        <figure class="flex-1 text-center">
+                            <img src="S__48939039_0.jpg" alt="騎車亂跑" class="w-full h-auto rounded-lg shadow-md object-cover border border-gray-800">
+                            <figcaption class="mt-2 text-gray-500 italic">騎車亂跑</figcaption>
+                        </figure>
+                        <figure class="flex-1 text-center">
+                            <img src="S__48939041_0.jpg" alt="風景照" class="w-full h-auto rounded-lg shadow-md object-cover border border-gray-800">
+                            <figcaption class="mt-2 text-gray-500 italic">風景照</figcaption>
+                        </figure>
+                    </div>
+                </article>
+
+                <!-- 學習經歷介紹 -->
                 <article id="section2" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
                     <header class="border-b border-gray-800 pb-3 mb-4">
                         <h2 class="text-2xl font-bold text-white">學習經歷 (Other)</h2>
@@ -130,7 +236,7 @@
                     </section>
                 </article>
 
-                <!-- 技能介紹 (屬於 '其他....' 的一部分) -->
+                <!-- 技能介紹 -->
                 <article id="section3" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
                     <header class="border-b border-gray-800 pb-3 mb-4">
                         <h2 class="text-2xl font-bold text-white">個人技能 (Other)</h2>
@@ -155,68 +261,12 @@
                     </section>
                 </article>
 
-                <!-- 音樂作品介紹 (屬於 '專案/作品集' 的一部分) -->
-                <article id="section4" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
-                    <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-800 pb-3">音樂作品 (Portfolio)</h2>
-                    <!-- 音訊加入點 1: 音樂檔案 -->
-                    <audio controls class="w-full bg-gray-900 rounded-lg border border-gray-700">
-                        <!-- 請將 src 屬性的值替換為您的音訊檔案路徑或公開網址 (URL)，例如：<source src="my_song.mp3" type="audio/mpeg"> -->
-                        <source src="New Composition #1.mp3" type="audio/mpeg">
-                    </audio>
-                    <p class="text-sm text-gray-500 mt-2">請注意：由於安全限制，本地音訊檔案 "New Composition #1.mp3" 無法在此預覽中播放。請使用公共 URL 替換 `src` 屬性。</p>
-                </article>
-
-                <!-- 視訊作品介紹 (屬於 '專案/作品集' 的一部分) -->
-                <article id="section5" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
-                    <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-800 pb-3">視訊作品 (Portfolio)</h2>
-                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
-                        <div class="flex-1 min-w-0">
-                            <!-- 視訊加入點 1: 第一個影片檔案 -->
-                            <video controls class="w-full h-auto rounded-lg shadow-md bg-gray-900 border border-gray-700">
-                                <!-- 請將 src 屬性的值替換為您的視訊檔案路徑或公開網址 (URL)，例如：<source src="my_video1.mp4" type="video/mp4"> -->
-                                <source src="assets/video/Whispers in the Trees 1.mp4" type="video/mp4">
-                                抱歉，您的瀏覽器不支援視訊元素。
-                            </video>
-                            <p class="text-xs text-gray-500 mt-1">請使用公共 URL 替換第一個視訊的 `src` 屬性。</p>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <!-- 視訊加入點 2: 第二個影片檔案 -->
-                            <video controls class="w-full h-auto rounded-lg shadow-md bg-gray-900 border border-gray-700">
-                                <!-- 請將 src 屬性的值替換為您的視訊檔案路徑或公開網址 (URL)，例如：<source src="my_video2.mp4" type="video/mp4"> -->
-                                <source src="assets/video/Rise Up and Shine.mp4" type="video/mp4">
-                                抱歉，您的瀏覽器不支援視訊元素。
-                            </video>
-                            <p class="text-xs text-gray-500 mt-1">請使用公共 URL 替換第二個視訊的 `src` 屬性。</p>
-                        </div>
-                    </div>
-                </article>
-
-                <!-- 圖片作品集介紹與描述 (屬於 '專案/作品集' 的一部分) -->
-                <article id="section6" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
-                    <h2 class="text-2xl font-bold text-white mb-4 border-b border-gray-800 pb-3">圖片作品 (Portfolio)</h2>
-                    <div class="flex flex-col md:flex-row gap-4 justify-center">
-                        <figure class="flex-1 text-center">
-                            <!-- 圖片加入點 2: 第一張圖片 -->
-                            <!-- 請將 src 屬性的值替換為您的圖片檔案路徑或公開網址 (URL) -->
-                            <img src="S__48939039_0.jpg" alt="騎車亂跑" class="w-full h-auto rounded-lg shadow-md object-cover border border-gray-800">
-                            <figcaption class="mt-2 text-gray-500 italic">騎車亂跑</figcaption>
-                        </figure>
-                        <figure class="flex-1 text-center">
-                            <!-- 圖片加入點 3: 第二張圖片 -->
-                            <!-- 請將 src 屬性的值替換為您的圖片檔案路徑或公開網址 (URL) -->
-                            <img src="S__48939041_0.jpg" alt="風景照" class="w-full h-auto rounded-lg shadow-md object-cover border border-gray-800">
-                            <figcaption class="mt-2 text-gray-500 italic">風景照</figcaption>
-                        </figure>
-                    </div>
-                </article>
-
-                <!-- 聯絡我 (黑白風格) -->
+                <!-- 聯絡我 -->
                 <article id="contact" class="bg-[#0a0a0a] p-6 rounded-xl shadow-2xl border border-gray-900">
                     <h2 class="text-3xl font-bold text-white mb-4">聯絡我</h2>
                     <p class="text-xl text-gray-400 mb-4">
                         如果您有任何問題、合作邀約或只是想打個招呼，隨時歡迎透過電子郵件與我聯繫：
                     </p>
-                    <!-- 按鈕使用白框和白字，懸停時反白 -->
                     <a href="mailto:yangricky1210@gmail.com" class="inline-block bg-transparent text-white border-2 border-gray-600 font-semibold py-3 px-8 rounded-full shadow-lg hover:bg-white hover:text-black transition duration-300 transform hover:scale-105">
                         yangricky1210@gmail.com
                     </a>
@@ -224,7 +274,7 @@
                 
             </div>
             
-            <!-- 側邊欄補充資訊 (黑白風格) -->
+            <!-- 側邊欄補充資訊 -->
             <aside class="lg:col-span-1 mt-8 lg:mt-0 bg-[#0a0a0a] p-6 rounded-xl shadow-2xl h-fit border border-gray-900">
                 <h3 class="text-xl font-bold text-white border-b border-gray-800 pb-2 mb-4">補充資訊</h3>
                 <p class="text-gray-500">這是側邊欄，可以用來放一些精選文章、社群連結或個人語錄等快速資訊。</p>
@@ -236,7 +286,7 @@
         </div>
     </main>
     
-    <!-- 頁尾區 (純黑) -->
+    <!-- 頁尾區 -->
     <footer class="bg-black text-white py-8 mt-12 border-t border-gray-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p class="text-lg mb-2">聯絡我：<a href="mailto:yangricky1210@gmail.com" class="text-gray-400 hover:text-white">yangricky1210@gmail.com</a></p>
@@ -244,7 +294,201 @@
             <p class="text-sm text-gray-600 mt-4">&copy; 2025 楊侑叡. All Rights Reserved.</p>
         </div>
     </footer>
+
+    <!-- 貪吃蛇遊戲邏輯 Script -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreDisplay = document.getElementById('score-display');
+            const highScoreDisplay = document.getElementById('high-score-display');
+            const overlay = document.getElementById('overlay');
+            const overlayTitle = document.getElementById('overlay-title');
+            const restartBtn = document.getElementById('restart-btn');
+
+            // 遊戲常數
+            const gridSize = 20;
+            const tileCount = canvas.width / gridSize;
+
+            // 遊戲狀態
+            let snake = [{ x: 10, y: 10 }];
+            let food = { x: 5, y: 5 };
+            let dx = 0;
+            let dy = 0;
+            let nextDx = 0;
+            let nextDy = 0;
+            let score = 0;
+            let highScore = localStorage.getItem('snakeHighScore') || 0;
+            let gameActive = false;
+            let gameLoopTimeout;
+            let currentSpeed = 150;
+
+            highScoreDisplay.textContent = highScore;
+
+            function initGame() {
+                snake = [{ x: 10, y: 10 }, { x: 10, y: 11 }, { x: 10, y: 12 }];
+                score = 0;
+                scoreDisplay.textContent = score;
+                dx = 0;
+                dy = -1;
+                nextDx = 0;
+                nextDy = -1;
+                currentSpeed = 150;
+                spawnFood();
+                gameActive = true;
+                overlay.classList.add('hidden');
+                
+                // 聚焦在畫布上，方便鍵盤操作（雖然 canvas 本身不能 focus，但這裡用變數控制邏輯）
+                main();
+            }
+
+            function main() {
+                if (!gameActive) return;
+
+                gameLoopTimeout = setTimeout(() => {
+                    clearCanvas();
+                    moveSnake();
+                    drawFood();
+                    drawSnake();
+                    checkGameOver();
+                    main();
+                }, currentSpeed);
+            }
+
+            function clearCanvas() {
+                ctx.fillStyle = '#2d3748';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.strokeStyle = '#384455';
+                ctx.lineWidth = 1;
+                for(let i = 0; i <= canvas.width; i += gridSize) {
+                    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+                }
+            }
+
+            function drawSnake() {
+                snake.forEach((part, index) => {
+                    ctx.fillStyle = index === 0 ? '#4ade80' : '#22c55e';
+                    ctx.strokeStyle = '#166534';
+                    const x = part.x * gridSize;
+                    const y = part.y * gridSize;
+                    ctx.fillRect(x + 1, y + 1, gridSize - 2, gridSize - 2);
+                    ctx.strokeRect(x + 1, y + 1, gridSize - 2, gridSize - 2);
+                });
+            }
+
+            function moveSnake() {
+                dx = nextDx;
+                dy = nextDy;
+                const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+                snake.unshift(head);
+
+                if (head.x === food.x && head.y === food.y) {
+                    score += 10;
+                    scoreDisplay.textContent = score;
+                    if (score > highScore) {
+                        highScore = score;
+                        highScoreDisplay.textContent = highScore;
+                        localStorage.setItem('snakeHighScore', highScore);
+                    }
+                    if (currentSpeed > 60) currentSpeed -= 2;
+                    spawnFood();
+                } else {
+                    snake.pop();
+                }
+            }
+
+            function drawFood() {
+                ctx.fillStyle = '#f87171';
+                ctx.beginPath();
+                const centerX = food.x * gridSize + gridSize/2;
+                const centerY = food.y * gridSize + gridSize/2;
+                ctx.arc(centerX, centerY, gridSize/2 - 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#4ade80';
+                ctx.fillRect(centerX - 1, centerY - gridSize/2, 2, 4);
+            }
+
+            function spawnFood() {
+                food = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+                snake.forEach(part => {
+                    if (part.x === food.x && part.y === food.y) spawnFood();
+                });
+            }
+
+            function checkGameOver() {
+                const head = snake[0];
+                if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                    endGame();
+                }
+                for (let i = 1; i < snake.length; i++) {
+                    if (head.x === snake[i].x && head.y === snake[i].y) {
+                        endGame();
+                    }
+                }
+            }
+
+            function endGame() {
+                gameActive = false;
+                clearTimeout(gameLoopTimeout);
+                overlayTitle.textContent = "遊戲結束";
+                restartBtn.textContent = "再玩一次";
+                overlay.classList.remove('hidden');
+            }
+
+            function handleKeydown(e) {
+                // 只有當遊戲進行中時，才攔截方向鍵，避免影響網頁捲動
+                if (!gameActive) return;
+
+                const key = e.key;
+                const goingUp = dy === -1;
+                const goingDown = dy === 1;
+                const goingRight = dx === 1;
+                const goingLeft = dx === -1;
+
+                // 如果按下了方向鍵，且遊戲正在進行，阻止網頁預設捲動
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                    e.preventDefault();
+                }
+
+                if (key === 'ArrowUp' && !goingDown) { nextDx = 0; nextDy = -1; }
+                if (key === 'ArrowDown' && !goingUp) { nextDx = 0; nextDy = 1; }
+                if (key === 'ArrowLeft' && !goingRight) { nextDx = -1; nextDy = 0; }
+                if (key === 'ArrowRight' && !goingLeft) { nextDx = 1; nextDy = 0; }
+            }
+
+            const setDirection = (newDx, newDy) => {
+                if (gameActive) {
+                    if (newDx === 1 && dx !== -1) { nextDx = 1; nextDy = 0; }
+                    if (newDx === -1 && dx !== 1) { nextDx = -1; nextDy = 0; }
+                    if (newDy === 1 && dy !== -1) { nextDx = 0; nextDy = 1; }
+                    if (newDy === -1 && dy !== 1) { nextDx = 0; nextDy = -1; }
+                }
+            };
+
+            window.addEventListener('keydown', handleKeydown);
+            restartBtn.addEventListener('click', initGame);
+            
+            // 觸控事件
+            document.getElementById('btn-up').addEventListener('touchstart', (e) => { e.preventDefault(); setDirection(0, -1); });
+            document.getElementById('btn-down').addEventListener('touchstart', (e) => { e.preventDefault(); setDirection(0, 1); });
+            document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); setDirection(-1, 0); });
+            document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); setDirection(1, 0); });
+            
+            // 滑鼠點擊控制 (桌面測試用)
+            document.getElementById('btn-up').addEventListener('mousedown', () => setDirection(0, -1));
+            document.getElementById('btn-down').addEventListener('mousedown', () => setDirection(0, 1));
+            document.getElementById('btn-left').addEventListener('mousedown', () => setDirection(-1, 0));
+            document.getElementById('btn-right').addEventListener('mousedown', () => setDirection(1, 0));
+
+            // 初始畫面
+            clearCanvas();
+        })();
+    </script>
 </body>
 
 </html>
-
